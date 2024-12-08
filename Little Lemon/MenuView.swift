@@ -11,6 +11,7 @@ import CoreData
 struct MenuView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State var searchText = ""
+    @State var selectedFilter = ""
     
     func buildSortDescriptors() -> [NSSortDescriptor] {
 
@@ -20,11 +21,25 @@ struct MenuView: View {
     }
     
     func buildPredicate() -> NSPredicate {
-        if searchText == "" {
-            return NSPredicate(value: true)
-        } else {
-            return NSPredicate(format: "title CONTAINS[cd] %@", searchText)
+        var predicates: [NSPredicate] = []
+        
+        // Predicate for search text
+        if !searchText.isEmpty {
+            predicates.append(NSPredicate(format: "title CONTAINS[cd] %@", searchText))
         }
+        
+        // Predicate for selected filter
+        if !selectedFilter.isEmpty {
+            predicates.append(NSPredicate(format: "category == %@", selectedFilter))
+        }
+        
+        // If no predicates, return a predicate that matches everything
+        if predicates.isEmpty {
+            return NSPredicate(value: true)
+        }
+        
+        // Combine predicates with AND
+        return NSCompoundPredicate(type: .and, subpredicates: predicates)
     }
     
     func getMenuData() {
@@ -55,6 +70,7 @@ struct MenuView: View {
                     dish.title = menuItem.title
                     dish.image = menuItem.image
                     dish.price = menuItem.price
+                    dish.category = menuItem.category
                 }
                         
                 try? viewContext.save()
@@ -66,22 +82,35 @@ struct MenuView: View {
         }
         
         task.resume()
-        
     }
     
     var body: some View {
-        VStack {
-            Text("Title")
-            Text("Chicago")
-            Text("Description")
-            
-            TextField("Search menu", text: $searchText)
+        NavigationView {
+            VStack {
+                
+                HeroView(hasSearchField: true, searchText: $searchText)
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Order for Delivery".uppercased())
+                        .font(.headline)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(["starters", "mains", "desserts", "drinks"], id: \.self) { item in
+                                FilterButton(selectedFilter: $selectedFilter, item: item)
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                }
                 .padding()
-            
-            FetchedObjects(predicate: buildPredicate(), sortDescriptors: buildSortDescriptors()) { (dishes: [Dish]) in
-                List {
-                    ForEach(dishes) { dish in
-                        NavigationLink(destination: MenuItemView(dish: dish)) {
+                
+                Divider()
+                  
+                FetchedObjects(predicate: buildPredicate(), sortDescriptors: buildSortDescriptors()) { (dishes: [Dish]) in
+                    List {
+                        ForEach(dishes) { dish in
                             HStack(spacing: 16) {
                                 AsyncImage(url: URL(string: dish.image!)) { image in
                                     image.image?.resizable()
@@ -97,15 +126,51 @@ struct MenuView: View {
                             }
                         }
                     }
+                    .listStyle(.plain)
                 }
             }
-        }
-        .onAppear {
-            getMenuData()
+            .onAppear {
+                getMenuData()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.white)
+            .toolbarBackgroundVisibility(.visible)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Image("Logo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100, height: 32)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: UserProfileView()) {
+                        Image("profile-image-placeholder")
+                            .resizable()
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
+                    }
+                    
+                }
+            }
         }
     }
 }
 
 #Preview {
     MenuView()
+}
+
+struct FilterButton: View {
+    @Binding var selectedFilter: String
+    var item: String
+    
+    var body: some View {
+        Button(item.uppercased()) {
+            selectedFilter = item
+        }
+        .font(.system(size: 12, weight: selectedFilter == item ? .bold : .regular))
+        .controlSize(.mini)
+        .buttonStyle(.bordered)
+    }
 }
