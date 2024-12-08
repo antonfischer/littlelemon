@@ -34,6 +34,7 @@ struct OnboardingView: View {
                             .foregroundStyle(.secondary)
                         TextField("", text: $firstName)
                             .textFieldStyle(.roundedBorder)
+                            .controlSize(.large)
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -43,6 +44,7 @@ struct OnboardingView: View {
                             .foregroundStyle(.secondary)
                         TextField("", text: $lastName)
                             .textFieldStyle(.roundedBorder)
+                            .controlSize(.large)
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -52,6 +54,7 @@ struct OnboardingView: View {
                             .foregroundStyle(.secondary)
                         TextField("", text: $email)
                             .textFieldStyle(.roundedBorder)
+                            .controlSize(.large)
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)
                     }

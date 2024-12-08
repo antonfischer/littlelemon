@@ -71,6 +71,7 @@ struct MenuView: View {
                     dish.image = menuItem.image
                     dish.price = menuItem.price
                     dish.category = menuItem.category
+                    dish.dishDescription = menuItem.description
                 }
                         
                 try? viewContext.save()
@@ -112,17 +113,29 @@ struct MenuView: View {
                     List {
                         ForEach(dishes) { dish in
                             HStack(spacing: 16) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("\(dish.title!)")
+                                        .font(.headline)
+                                    
+                                    Text("\(dish.dishDescription!)")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                    
+                                    Text("$\(dish.price!)")
+                                        .font(.body)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                Spacer()
+                                
                                 AsyncImage(url: URL(string: dish.image!)) { image in
                                     image.image?.resizable()
                                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                 }
-                                .frame(width: 50, height: 50)
+                                .frame(width: 76, height: 76)
                                 
-                                Text("\(dish.title!)")
-                                    .font(.headline)
-                                Spacer()
-                                Text("$\(dish.price!)")
-                                    .foregroundStyle(.secondary)
+                                
                             }
                         }
                     }
